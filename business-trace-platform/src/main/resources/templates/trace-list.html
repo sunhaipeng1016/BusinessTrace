@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务链路跟踪 - Trace List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-hover tbody tr:hover { background-color: #f8f9fa; }
+        .table td { font-family: monospace; font-size: 0.85em; vertical-align: top; }
+        .duration-highlight { font-weight: bold; color: #0d6efd; }
+        .params-cell { white-space: pre-wrap; word-break: break-all; max-width: 300px; }
+        .error-cell { white-space: pre-wrap; word-break: break-all; max-width: 300px; color: #dc3545; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/traces">业务链路跟踪平台</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">筛选条件</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="/traces" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Trace ID</label>
+                                <input type="text" name="traceId" class="form-control" 
+                                       th:value="${traceId}" placeholder="输入Trace ID">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">服务名称</label>
+                                <select name="serviceName" class="form-select">
+                                    <option value="">全部服务</option>
+                                    <option th:each="name : ${serviceNames}" 
+                                            th:value="${name}" 
+                                            th:text="${name}"
+                                            th:selected="${name == serviceName}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">方法名称</label>
+                                <input type="text" name="operationName" class="form-control" 
+                                       th:value="${operationName}" placeholder="输入方法名称">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">时间范围(小时)</label>
+                                <input type="number" name="lastHours" class="form-control" 
+                                       th:value="${lastHours}" min="1" max="24">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">查询</button>
+                                <button type="button" class="btn btn-secondary ms-2" onclick="location.reload()">刷新</button>
+                                <span class="ms-3 text-muted">共 <span th:text="${#lists.size(traces)}">0</span> 条链路</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">链路列表</h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                            <label class="form-check-label" for="autoRefresh">自动刷新(30s)</label>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Trace ID</th>
+                                    <th>时间</th>
+                                    <th>服务</th>
+                                    <th>方法</th>
+                                    <th>入参</th>
+                                    <th>出参</th>
+                                    <th>错误信息</th>
+                                    <th>耗时(ms)</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="trace : ${traces}" class="trace-row">
+                                    <td th:text="${trace.traceId}"></td>
+                                    <td th:text="${#temporals.format(trace.startTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                                    <td th:text="${trace.rootServiceName}"></td>
+                                    <td th:text="${trace.rootOperationName}"></td>
+                                    <td class="params-cell">
+                                        <span th:if="${trace.requestParams}" th:text="${trace.requestParams}"></span>
+                                        <span th:unless="${trace.requestParams}" class="text-muted">-</span>
+                                    </td>
+                                    <td class="params-cell">
+                                        <span th:if="${trace.responseParams}" th:text="${trace.responseParams}"></span>
+                                        <span th:unless="${trace.responseParams}" class="text-muted">-</span>
+                                    </td>
+                                    <td class="error-cell">
+                                        <span th:if="${trace.errorMessage}" th:text="${trace.errorMessage}"></span>
+                                        <span th:unless="${trace.errorMessage}" class="text-muted">-</span>
+                                    </td>
+                                    <td class="duration-highlight" th:text="${trace.durationMs}"></td>
+                                    <td>
+                                        <span th:text="${trace.status == 'OK' || trace.status == '0'} ? '✓ 成功' : '✗ 失败'"
+                                              th:classappend="${trace.status == 'OK' || trace.status == '0'} ? 'text-success fw-bold' : 'text-danger fw-bold'">
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(traces)}">
+                                    <td colspan="9" class="text-center text-muted py-4">暂无链路数据</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let autoRefreshEnabled = true;
+        let refreshInterval;
+
+        document.getElementById('autoRefresh').addEventListener('change', function() {
+            autoRefreshEnabled = this.checked;
+            if (autoRefreshEnabled) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        });
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                location.reload();
+            }, 5000);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        if (autoRefreshEnabled) {
+            startAutoRefresh();
+        }
+    </script>
+</body>
+</html>

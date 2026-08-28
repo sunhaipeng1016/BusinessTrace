@@ -1,0 +1,15 @@
+# ============================================================================
+# Business Trace SDK 配置
+# ============================================================================
+
+# 启用链路跟踪
+business.trace.enabled=true
+
+# 服务名称（建议使用有意义的名称）
+business.trace.service-name=your-service-name
+
+# Elasticsearch 地址
+business.trace.elasticsearch.uri=http://localhost:9200
+
+# Elasticsearch 索引名称
+business.trace.elasticsearch.index=otel-traces
