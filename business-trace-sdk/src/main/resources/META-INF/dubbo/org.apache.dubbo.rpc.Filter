@@ -1,0 +1,1 @@
+traceFilter=com.github.sunhaipeng.businesstrace.sdk.propagation.dubbo.DubboTraceFilter

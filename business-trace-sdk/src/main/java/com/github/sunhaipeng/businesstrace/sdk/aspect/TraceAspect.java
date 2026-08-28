@@ -22,8 +22,29 @@ import java.util.UUID;
 public class TraceAspect {
 
     private static final Logger log = LoggerFactory.getLogger(TraceAspect.class);
-    private static final ThreadLocal<String> TRACE_ID_HOLDER = new ThreadLocal<>();
-    private static final ThreadLocal<String> PARENT_SPAN_ID_HOLDER = new ThreadLocal<>();
+    static final ThreadLocal<String> TRACE_ID_HOLDER = new ThreadLocal<>();
+    static final ThreadLocal<String> PARENT_SPAN_ID_HOLDER = new ThreadLocal<>();
+    
+    public static void setTraceId(String traceId) {
+        TRACE_ID_HOLDER.set(traceId);
+    }
+    
+    public static String getTraceId() {
+        return TRACE_ID_HOLDER.get();
+    }
+    
+    public static void setParentSpanId(String parentSpanId) {
+        PARENT_SPAN_ID_HOLDER.set(parentSpanId);
+    }
+    
+    public static String getParentSpanId() {
+        return PARENT_SPAN_ID_HOLDER.get();
+    }
+    
+    public static void clearTraceContext() {
+        TRACE_ID_HOLDER.remove();
+        PARENT_SPAN_ID_HOLDER.remove();
+    }
 
     private final TraceProperties properties;
     private final ElasticsearchReporter reporter;
@@ -37,29 +58,34 @@ public class TraceAspect {
 
     @Around("@annotation(traceMethod)")
     public Object traceMethod(ProceedingJoinPoint joinPoint, TraceMethod traceMethod) throws Throwable {
+        // 检查是否开启了 trace 功能
         if (!properties.isEnabled()) {
             return joinPoint.proceed();
         }
 
         String serviceName = getServiceName(joinPoint);
         String operationName = getOperationName(traceMethod, joinPoint);
-        
+
+        // 创建 span
         TraceSpan span = new TraceSpan();
         span.setServiceName(serviceName);
         span.setOperationName(operationName);
-        
+
+        // 从 ThreadLocal 中获取 traceId
         String traceId = TRACE_ID_HOLDER.get();
         if (traceId == null) {
             traceId = UUID.randomUUID().toString().replace("-", "");
             TRACE_ID_HOLDER.set(traceId);
         }
         span.setTraceId(traceId);
-        
+
+        // 从 ThreadLocal 中获取 parentSpanId
         String parentSpanId = PARENT_SPAN_ID_HOLDER.get();
         if (parentSpanId != null) {
             span.setParentSpanId(parentSpanId);
         }
-        
+
+        // 捕获请求参数
         if (traceMethod.captureParams()) {
             try {
                 Object[] args = joinPoint.getArgs();
@@ -83,6 +109,7 @@ public class TraceAspect {
             }
         }
         
+        // 设置 spanId 到 ThreadLocal
         PARENT_SPAN_ID_HOLDER.set(span.getSpanId());
         
         try {
@@ -90,31 +117,38 @@ public class TraceAspect {
             
             if (traceMethod.captureResult() && result != null) {
                 try {
+                    // 捕获响应参数
                     span.setResponseParams(objectMapper.writeValueAsString(result));
                 } catch (Exception e) {
-                    log.debug("Failed to capture response params: {}", e.getMessage());
+                    log.error("Failed to capture response params: {}", e.getMessage());
                 }
             }
-            
+
+            // 完成 span
             span.complete();
             
+            // 捕获自定义属性
             Map<String, Object> customAttributes = TraceContext.getAll();
             span.setCustomAttributes(customAttributes);
-            
+
+            // 报告 span
             reporter.report(span);
             TraceContext.clear();
             
-            log.debug("Trace completed: service={}, operation={}, duration={}ms", 
+            log.info("Trace completed: service={}, operation={}, duration={}ms",
                      serviceName, operationName, span.getDurationMs());
             
             return result;
         } catch (Throwable throwable) {
+            // 设置错误信息
             span.setErrorMessage(throwable.getMessage());
             span.complete();
             
+            // 捕获自定义属性
             Map<String, Object> customAttributes = TraceContext.getAll();
             span.setCustomAttributes(customAttributes);
             
+            // 报告 span
             reporter.report(span);
             TraceContext.clear();
             
@@ -123,6 +157,7 @@ public class TraceAspect {
             
             throw throwable;
         } finally {
+            // 清除 ThreadLocal 中的 spanId
             PARENT_SPAN_ID_HOLDER.remove();
             if (parentSpanId == null) {
                 TRACE_ID_HOLDER.remove();

@@ -24,6 +24,7 @@
     
     <properties>
         <java.version>1.8</java.version>
+        <dubbo.version>3.2.10</dubbo.version>
     </properties>
     
     <dependencyManagement>
