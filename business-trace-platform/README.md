@@ -26,19 +26,21 @@ java -jar business-trace-platform-0.0.3-SNAPSHOT.jar
 
 ### 3. 访问
 
-打开浏览器访问：http://localhost:8080
+打开浏览器访问：http://localhost:8088
 
 ## 配置
 
-在`application.yml`或`application.properties`中配置：
+在`application.properties`中配置：
 
-```yaml
-business:
-  trace:
-    platform:
-      elasticsearch:
-        uri: http://localhost:9200     # Elasticsearch地址
-        index: otel-traces             # 索引名称（需与SDK配置一致）
+```properties
+# Elasticsearch配置
+spring.elasticsearch.uris=http://localhost:9200
+
+# 索引名称（需与SDK配置一致，默认：otel-traces）
+business.trace.elasticsearch.index=otel-traces
+
+# 服务端口（默认8088）
+server.port=8088
 ```
 
 ## 功能说明

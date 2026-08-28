@@ -5,18 +5,31 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TraceSpan {
+    // 跟踪 ID
     private String traceId;
+    // 跟踪 span ID
     private String spanId;
+    // 父 span ID
     private String parentSpanId;
+    // 服务名称
     private String serviceName;
+    // 操作名称
     private String operationName;
+    // 开始时间
     private Instant startTime;
+    // 结束时间
     private Instant endTime;
+    // 持续时间（毫秒）
     private Long durationMs;
+    // 请求参数
     private String requestParams;
+    // 响应参数
     private String responseParams;
+    // 错误消息
     private String errorMessage;
+    // 状态
     private String status = "OK";
+    // 自定义属性
     private Map<String, Object> customAttributes;
 
     public TraceSpan() {

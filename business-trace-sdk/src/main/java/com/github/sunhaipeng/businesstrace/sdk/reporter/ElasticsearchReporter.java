@@ -11,13 +11,27 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Elasticsearch报告器，用于将 trace span 报告到Elasticsearch
+ */
 public class ElasticsearchReporter {
 
     private static final Logger log = LoggerFactory.getLogger(ElasticsearchReporter.class);
-    
+    /**
+     * Elasticsearch 模板，用于构建文档
+     */
     private final RestTemplate restTemplate;
+    /**
+     * JSON 序列化器，用于将 trace span 转换为 JSON 字符串
+     */
     private final ObjectMapper objectMapper;
+    /**
+     * Elasticsearch 服务器 URI
+     */
     private final String esUri;
+    /**
+     * Elasticsearch 索引名称
+     */
     private final String index;
 
     public ElasticsearchReporter(RestTemplate restTemplate, ObjectMapper objectMapper, 
@@ -28,6 +42,9 @@ public class ElasticsearchReporter {
         this.index = index;
     }
 
+    /**
+     * 报告 trace span 到 Elasticsearch
+     */
     public void report(TraceSpan span) {
         try {
             Map<String, Object> document = buildDocument(span);
@@ -49,6 +66,9 @@ public class ElasticsearchReporter {
         }
     }
 
+    /**
+     * 构建 Elasticsearch 文档，包含 trace span 的所有信息
+     */
     private Map<String, Object> buildDocument(TraceSpan span) {
         Map<String, Object> doc = new LinkedHashMap<>();
         

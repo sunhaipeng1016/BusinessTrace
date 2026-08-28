@@ -4,8 +4,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "business.trace")
 public class TraceProperties {
+    // 是否开启 trace 功能
     private boolean enabled = true;
+    // 服务名称
     private String serviceName;
+    // Elasticsearch 配置
     private Elasticsearch elasticsearch = new Elasticsearch();
 
     public boolean isEnabled() {

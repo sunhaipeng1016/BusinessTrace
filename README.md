@@ -59,16 +59,18 @@ mvn clean package -DskipTests
 java -jar target/business-trace-platform-0.0.3-SNAPSHOT.jar
 ```
 
-访问 http://localhost:8080 查看链路数据。
+访问 http://localhost:8088 查看链路数据。
 
 ## 特性
 
 ### SDK
 - **零侵入**：只需添加`@TraceMethod`注解即可自动跟踪方法调用
-- **轻量级**：无外部依赖，仅依赖Spring Boot和AspectJ
+- **轻量级**：核心功能仅依赖Spring Boot和AspectJ，Dubbo为可选依赖
 - **跨版本兼容**：支持Spring Boot 2.x和3.x，Java 1.8+
 - **自动采集**：自动记录方法入参、出参、错误信息和执行耗时
 - **链路追踪**：支持跨方法调用链追踪，自动生成TraceId
+- **分布式追踪**：支持HTTP、Dubbo RPC跨服务traceId传播
+- **异步支持**：支持线程池场景的traceId传递
 - **自定义上下文**：支持通过`TraceContext`添加自定义业务信息
 
 ### Platform
