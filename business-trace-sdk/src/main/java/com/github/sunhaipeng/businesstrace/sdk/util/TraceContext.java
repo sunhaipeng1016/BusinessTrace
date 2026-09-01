@@ -48,4 +48,28 @@ public class TraceContext {
     public static void clear() {
         CONTEXT_HOLDER.remove();
     }
+
+    /**
+     * 获取当前上下文的快照（副本）。
+     * 供 TraceAspect 在嵌套 span 结束时恢复外层上下文使用，属于 SDK 内部 API。
+     *
+     * @return 当前上下文的副本；当前没有上下文时返回 null
+     */
+    public static Map<String, Object> snapshot() {
+        Map<String, Object> context = CONTEXT_HOLDER.get();
+        return context == null ? null : new HashMap<>(context);
+    }
+
+    /**
+     * 将上下文恢复为指定快照，属于 SDK 内部 API。
+     *
+     * @param snapshot 之前通过 {@link #snapshot()} 获取的快照；传 null 表示恢复到空状态
+     */
+    public static void restore(Map<String, Object> snapshot) {
+        if (snapshot == null) {
+            CONTEXT_HOLDER.remove();
+        } else {
+            CONTEXT_HOLDER.set(new HashMap<>(snapshot));
+        }
+    }
 }

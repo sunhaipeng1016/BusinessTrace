@@ -111,7 +111,10 @@ public class TraceAspect {
         
         // 设置 spanId 到 ThreadLocal
         PARENT_SPAN_ID_HOLDER.set(span.getSpanId());
-        
+
+        // 记录进入前的自定义上下文快照，span 结束后恢复，避免嵌套 span 相互覆盖
+        Map<String, Object> contextSnapshot = TraceContext.snapshot();
+
         try {
             Object result = joinPoint.proceed();
             
@@ -127,14 +130,13 @@ public class TraceAspect {
             // 完成 span
             span.complete();
             
-            // 捕获自定义属性
+            // 捕获自定义属性（包含外层已放入的属性，随链路向下传递）
             Map<String, Object> customAttributes = TraceContext.getAll();
             span.setCustomAttributes(customAttributes);
 
             // 报告 span
             reporter.report(span);
-            TraceContext.clear();
-            
+
             log.info("Trace completed: service={}, operation={}, duration={}ms",
                      serviceName, operationName, span.getDurationMs());
             
@@ -144,22 +146,28 @@ public class TraceAspect {
             span.setErrorMessage(throwable.getMessage());
             span.complete();
             
-            // 捕获自定义属性
+            // 捕获自定义属性（包含外层已放入的属性，随链路向下传递）
             Map<String, Object> customAttributes = TraceContext.getAll();
             span.setCustomAttributes(customAttributes);
-            
+
             // 报告 span
             reporter.report(span);
-            TraceContext.clear();
-            
-            log.error("Trace error: service={}, operation={}, error={}", 
+
+            log.error("Trace error: service={}, operation={}, error={}",
                      serviceName, operationName, throwable.getMessage());
             
             throw throwable;
         } finally {
-            // 清除 ThreadLocal 中的 spanId
-            PARENT_SPAN_ID_HOLDER.remove();
-            if (parentSpanId == null) {
+            if (parentSpanId != null) {
+                // 嵌套 span：恢复自定义上下文到进入本 span 前的状态，
+                // 避免内层 span 把外层放入的业务属性清掉
+                TraceContext.restore(contextSnapshot);
+                // 恢复上一层的 spanId，保证同一方法内多次嵌套调用都能正确挂到父节点
+                PARENT_SPAN_ID_HOLDER.set(parentSpanId);
+            } else {
+                // 最外层 span：彻底清理 ThreadLocal，防止线程复用导致上下文泄漏
+                TraceContext.clear();
+                PARENT_SPAN_ID_HOLDER.remove();
                 TRACE_ID_HOLDER.remove();
             }
         }
