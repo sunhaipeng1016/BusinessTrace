@@ -15,7 +15,7 @@ public class TraceWebMvcConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new TraceServerInterceptor())
+        registry.addWebRequestInterceptor(new TraceServerInterceptor())
                 .addPathPatterns("/**");
     }
 }

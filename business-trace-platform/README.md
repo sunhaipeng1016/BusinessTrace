@@ -10,18 +10,30 @@
 - **完整展示**：展示链路的时间、服务、方法、入参、出参、错误信息、耗时
 - **开箱即用**：直接运行即可使用，无需复杂配置
 
+## 前置要求
+
+- **Elasticsearch**: 7.x/8.x（需要本地可访问，默认地址 `http://localhost:9200`）
+- 确保 SDK 已配置并写入数据到 Elasticsearch
+- **JDK**: 1.8+（编译目标 Java 9）
+- **Maven**: 3.x
+
 ## 快速开始
 
 ### 1. 构建
 
 ```bash
+cd business-trace-platform
 mvn clean package -DskipTests
 ```
 
 ### 2. 运行
 
 ```bash
-java -jar business-trace-platform-0.0.3-SNAPSHOT.jar
+# 方式一：直接运行 jar（需先执行构建）
+java -jar target/business-trace-platform-0.0.3-SNAPSHOT.jar
+
+# 方式二：使用 Maven 插件直接运行
+mvn spring-boot:run
 ```
 
 ### 3. 访问
@@ -68,7 +80,7 @@ server.port=8088
 
 ## 技术栈
 
-- **后端**: Spring Boot 2.5.15, Java 1.8
+- **后端**: Spring Boot 2.5.15, Java 1.8+ (编译目标 Java 9)
 - **前端**: Thymeleaf, Bootstrap 5
 - **存储**: Elasticsearch
 - **构建**: Maven

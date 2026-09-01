@@ -17,6 +17,26 @@ BusinessTrace/
 └── pom.xml
 ```
 
+## 前置要求
+
+- **Elasticsearch**: 7.x/8.x，本地可访问（默认地址 `http://localhost:9200`）
+- **JDK**: 1.8+（推荐 JDK 9+）
+- **Maven**: 3.x
+
+## 数据流
+
+```
+你的业务代码 (@TraceMethod 注解)
+        ↓
+business-trace-sdk (ElasticsearchReporter)
+        ↓ (HTTP POST)
+    Elasticsearch 7.x/8.x
+        ↓ (查询)
+business-trace-platform (可视化)
+        ↓
+   浏览器查看链路数据
+```
+
 ## 快速开始
 
 ### 1. 在业务项目中引入SDK
@@ -82,8 +102,8 @@ java -jar target/business-trace-platform-0.0.3-SNAPSHOT.jar
 
 ## 技术栈
 
-- **SDK**: Spring Boot 2.x/3.x, AspectJ, Java 1.8+
-- **Platform**: Spring Boot 2.5.15, Thymeleaf, Bootstrap 5, Java 1.8
+- **SDK**: Spring Boot 2.x, AspectJ, Java 1.8+
+- **Platform**: Spring Boot 2.5.15, Thymeleaf, Bootstrap 5, Java 1.8+ (编译目标 Java 9)
 - **存储**: Elasticsearch
 
 ## 文档
