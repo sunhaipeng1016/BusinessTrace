@@ -1,12 +1,12 @@
 # Business Trace SDK
 
-轻量级业务链路跟踪SDK，基于Spring Boot和AOP实现，支持自动采集方法调用链路的入参、出参、错误信息和耗时，并上报到Elasticsearch。
+轻量级业务链路跟踪SDK，基于Spring Boot和AOP实现，支持自动采集方法调用链路的入参、出参、错误信息和耗时，并直接上报到Elasticsearch。
 
 ## 特性
 
 - **零侵入**：只需添加`@TraceMethod`注解即可自动跟踪方法调用
 - **轻量级**：核心功能仅依赖Spring Boot和AspectJ，Dubbo为可选依赖
-- **跨版本兼容**：支持Spring Boot 2.x和3.x，Java 1.8+
+- **跨版本兼容**：支持Spring Boot 2.x，Java 1.8+
 - **自动采集**：自动记录方法入参、出参、错误信息和执行耗时
 - **链路追踪**：支持跨方法调用链追踪，自动生成TraceId
 - **分布式追踪**：支持HTTP、Dubbo RPC跨服务traceId传播
@@ -318,6 +318,13 @@ request.getHeaders().set("X-B3-ParentSpanId", parentSpanId);
 
 ### 故障排查
 
+> **提示**：以下排查日志均为 `DEBUG` 级别，需要在 `application.yml` 中开启才能看到：
+> ```yaml
+> logging:
+>   level:
+>     com.github.sunhaipeng.businesstrace: DEBUG
+> ```
+
 #### traceId 没有传递？
 
 1. 检查是否使用了 `traceRestTemplate` Bean
@@ -351,24 +358,89 @@ executor.setTaskDecorator(new TraceTaskDecorator());
 ## 兼容性
 
 - **Java**: 1.8+
-- **Spring Boot**: 2.x, 3.x
+- **Spring Boot**: 2.x
 
 ## 数据格式
 
-SDK会将跟踪数据以OTLP兼容格式上报到Elasticsearch，包含以下字段：
+SDK 直接将每个被跟踪的方法调用以 JSON 格式通过 HTTP POST 写入 Elasticsearch，文档结构如下：
 
-- `trace_id`: 链路追踪ID
-- `span_id`: 当前Span ID
-- `parent_span_id`: 父Span ID
-- `service.name`: 服务名称
-- `operation.name`: 操作名称
-- `start_time_unix_nano`: 开始时间（纳秒）
-- `end_time_unix_nano`: 结束时间（纳秒）
-- `duration_ms`: 耗时（毫秒）
-- `status.code`: 状态码（0=成功，1=失败）
-- `request.params`: 请求参数（JSON）
-- `response.params`: 响应参数（JSON）
-- `error.message`: 错误信息
+### Elasticsearch 文档字段说明
+
+| 字段路径 | 类型 | 说明 |
+|------|------|------|
+| `trace_id` | keyword | 链路追踪 ID（32 位十六进制） |
+| `span_id` | keyword | 当前 Span ID（16 位十六进制） |
+| `parent_span_id` | keyword | 父 Span ID（16 位十六进制，根 Span 为空） |
+| `service.name` | text | 服务名称 |
+| `name` | keyword | 操作名称，通常为 `类名.方法名` |
+| `start_time_unix_nano` | long | 开始时间（纳秒时间戳） |
+| `duration` | long | 耗时（纳秒，除以 1000000 得到毫秒） |
+| `status.code` | keyword | 状态：`"OK"` 成功，`"ERROR"` 失败 |
+| `attributes.request.params` | text | 请求参数（JSON 格式，通过 `@TraceMethod(captureParams=true)` 捕获） |
+| `attributes.response.params` | text | 响应参数（JSON 格式，通过 `@TraceMethod(captureResult=true)` 捕获） |
+| `attributes.error.message` | text | 异常信息（当方法抛出异常时） |
+| `attributes.custom.<key>` | text | 通过 `TraceContext.put("key", value)` 添加的自定义业务信息 |
+
+### 示例 ES 文档
+
+```json
+{
+  "trace_id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "span_id": "a1b2c3d4e5f6a7b8",
+  "parent_span_id": "",
+  "service.name": "order-service",
+  "name": "OrderController.createOrder",
+  "start_time_unix_nano": 1788241431552000000,
+  "duration": 135000000,
+  "status.code": "OK",
+  "attributes": {
+    "request.params": "{\"orderId\":\"12345\"}",
+    "response.params": "{\"id\":12345,\"status\":\"CREATED\"}",
+    "custom.userId": "12345"
+  }
+}
+```
+
+### 创建索引建议
+
+SDK 不会自动创建索引，建议提前创建索引模板，确保聚合和查询正常：
+
+```bash
+curl -X PUT "http://localhost:9200/_index_template/business-trace-template" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "index_patterns": ["otel-traces*"],
+    "template": {
+      "mappings": {
+        "properties": {
+          "trace_id": { "type": "keyword" },
+          "span_id": { "type": "keyword" },
+          "parent_span_id": { "type": "keyword" },
+          "service.name": {
+            "type": "text",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          },
+          "name": {
+            "type": "keyword",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          },
+          "start_time_unix_nano": { "type": "long" },
+          "duration": { "type": "long" },
+          "status.code": { "type": "keyword" }
+        }
+      }
+    }
+  }'
+```
+
+创建索引：
+```bash
+curl -X PUT "http://localhost:9200/otel-traces"
+```
 
 ## License
 
