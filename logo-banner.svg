@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Business Trace Logo - 横版 Banner（图标 + 文字）
+  适合放在 README 顶部或文档首页。
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400" viewBox="0 0 800 200">
+  <defs>
+    <linearGradient id="bt-gradient-b" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f2c5c"/>
+      <stop offset="55%" stop-color="#1668c7"/>
+      <stop offset="100%" stop-color="#22c1dc"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 透明底，方便深浅色主题页面使用 -->
+
+  <!-- ===== 图标部分（左侧，scaled 版本） ===== -->
+  <g transform="translate(40, 20) scale(0.6667)">
+    <path d="M 46 182 C 66 160, 82 122, 96 106 C 114 86, 134 70, 162 58"
+          fill="none" stroke="url(#bt-gradient-b)" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="70" cy="163" r="5" fill="#1668c7" opacity="0.55"/>
+    <circle cx="128" cy="88" r="5" fill="#22c1dc" opacity="0.75"/>
+    <circle cx="46" cy="182" r="12" fill="url(#bt-gradient-b)"/>
+    <circle cx="46" cy="182" r="5" fill="#ffffff"/>
+    <circle cx="96" cy="106" r="15" fill="url(#bt-gradient-b)"/>
+    <circle cx="96" cy="106" r="6" fill="#ffffff"/>
+    <circle cx="166" cy="54" r="24" fill="none" stroke="url(#bt-gradient-b)" stroke-width="10"/>
+    <circle cx="166" cy="54" r="8" fill="url(#bt-gradient-b)"/>
+  </g>
+
+  <!-- ===== 文字部分 ===== -->
+  <text x="220" y="108" font-family="Helvetica Neue, Helvetica, Arial, PingFang SC, sans-serif"
+        font-size="72" font-weight="700" fill="#0f2c5c">Business<tspan fill="url(#bt-gradient-b)"> Trace</tspan></text>
+  <text x="224" y="150" font-family="Helvetica Neue, Helvetica, Arial, PingFang SC, sans-serif"
+        font-size="24" letter-spacing="6" fill="#5a7ba6">轻量级业务链路跟踪</text>
+</svg>

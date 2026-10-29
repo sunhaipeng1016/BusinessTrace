@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Business Trace Logo
+  设计说明：三个由链路曲线串联的节点，代表调用链上的 Span；
+  末端节点带有放大镜圆环，寓意链路诊断与问题排查。
+  配色：深海军蓝 → 青色渐变，象征技术与可观测性。
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 240 240">
+  <defs>
+    <linearGradient id="bt-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f2c5c"/>
+      <stop offset="55%" stop-color="#1668c7"/>
+      <stop offset="100%" stop-color="#22c1dc"/>
+    </linearGradient>
+    <linearGradient id="bt-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f2f8fd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角方形底 -->
+  <rect x="8" y="8" width="224" height="224" rx="52" ry="52" fill="url(#bt-bg)" stroke="#dbe9f5" stroke-width="3"/>
+
+  <!-- 链路曲线（调用链路径） -->
+  <path d="M 46 182 C 66 160, 82 122, 96 106 C 114 86, 134 70, 162 58"
+        fill="none" stroke="url(#bt-gradient)" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- 链路数据流小点 -->
+  <circle cx="70" cy="163" r="5" fill="#1668c7" opacity="0.55"/>
+  <circle cx="128" cy="88" r="5" fill="#22c1dc" opacity="0.75"/>
+
+  <!-- 节点1：起始 Span -->
+  <circle cx="46" cy="182" r="12" fill="url(#bt-gradient)"/>
+  <circle cx="46" cy="182" r="5" fill="#ffffff"/>
+
+  <!-- 节点2：中间 Span -->
+  <circle cx="96" cy="106" r="15" fill="url(#bt-gradient)"/>
+  <circle cx="96" cy="106" r="6" fill="#ffffff"/>
+
+  <!-- 节点3：末端 Span + 放大镜圆环（链路诊断） -->
+  <circle cx="166" cy="54" r="24" fill="none" stroke="url(#bt-gradient)" stroke-width="9"/>
+  <circle cx="166" cy="54" r="8" fill="url(#bt-gradient)"/>
+</svg>

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo-banner.png" alt="Business Trace Logo" width="720"/>
+</p>
+
 # Business Trace
 
 轻量级业务链路跟踪解决方案，包含SDK和可视化平台。
